@@ -1,4 +1,4 @@
-void block_size();
-void cache_size();
-void speed_main_memory();
-void speed_cache_memory();
+long block_size();
+long cache_size();
+long speed_main_memory();
+long speed_cache_memory();
