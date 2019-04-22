@@ -49,6 +49,7 @@ long cache_size(double time_difference, int chunk_size) {
       break;
     }
   }
+  free(bigass_array);
   return num_bytes;
 }
 
@@ -73,6 +74,7 @@ double speed_main_memory() {
     access_time_total += poll_time / NUM_ACCESSES;
   }
   access_time = access_time_total / NUM_POLLS;
+  free(slots);
   return access_time;
 }
 
