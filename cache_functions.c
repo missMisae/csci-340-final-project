@@ -2,22 +2,54 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 #include "cache_functions.h"
 
 #define VERBOSE
-#define NUM_POLLS 66
+#define NUM_POLLS 100
 #define NUM_ACCESSES 31072896
+#define BFN 7000042
 
 long block_size() {
 }
 
-long cache_size() {
-}
+long cache_size(double time_difference, int chunk_size) {
+  char * bigass_array = malloc(sizeof(char)*BFN);
+  char trash_variable;
+  long num_bytes, i, j;
+  clock_t time_anchor;
+  double cached_access_time, recorded_access_time;
 
-double speed_array_accesses_sequenced() {
-}
+  time_anchor = clock();
+  for (i = 0; i < chunk_size; i++) {
+    trash_variable = bigass_array[i];
+  }
+  // We assume the first 100 accesses are cached
+  cached_access_time = (double)(clock() - time_anchor) / chunk_size;
+  num_bytes++;
 
-double speed_array_accesses_random() {
+  j = 0;
+  while(true) {
+    time_anchor = clock();
+    for (j++; i < chunk_size && i + (100 * j) < BFN; i++) {
+      trash_variable = bigass_array[i+(100*j)];
+    }
+    recorded_access_time = (double)(clock() - time_anchor) / chunk_size;
+    if (recorded_access_time < cached_access_time + time_difference) {
+      num_bytes++;
+    } else if (i >= BFN) {
+#ifdef VERBOSE
+      printf("Did not successfully fill the cache / find access time difference.\n");
+#endif
+      break;
+    } else {
+#ifdef VERBOSE
+      printf("Successfully filled the cache.\n");
+#endif
+      break;
+    }
+  }
+  return num_bytes;
 }
 
 double speed_main_memory() {
@@ -25,7 +57,7 @@ double speed_main_memory() {
   int i, r;
   clock_t time_anchor;
   double access_time_total, access_time, poll_time;
-  char * slots = malloc(sizeof(char)*RAND_MAX);
+  char * slots = malloc(sizeof(char)*NUM_ACCESSES);
   char trash_variable;
 
 #ifdef VERBOSE
@@ -49,7 +81,7 @@ double speed_cache_memory() {
   long j;
   clock_t time_anchor;
   double access_time_total, access_time, poll_time;
-  char * slots = malloc(sizeof(char)*RAND_MAX);
+  char * slots = malloc(sizeof(char)*NUM_ACCESSES);
   char trash_variable;
 
 #ifdef VERBOSE
@@ -68,9 +100,13 @@ double speed_cache_memory() {
 }
 
 int main() {
-  double access_speed_cache, access_speed_main;
+  double access_speed_cache, access_speed_main, magic_difference;
+  long cache_size_estimate;
   access_speed_cache = speed_cache_memory();
   access_speed_main = speed_main_memory();
-  printf("It takes %f to access all the slots in memory (seq).\n", access_speed_cache);
-  printf("It takes %f to access all the slots in memory (rand).\n", access_speed_main);
+  printf("It takes %f to access cached memory.\n", access_speed_cache);
+  printf("It takes %f to access main memory.\n", access_speed_main);
+  magic_difference = access_speed_main - access_speed_cache;
+  cache_size_estimate = cache_size(magic_difference, 100);
+  printf("We're estimating the cache size to be %ld bytes.\n", cache_size_estimate);
 }
